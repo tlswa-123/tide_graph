@@ -2,6 +2,25 @@
 
 A Monument Valley-style 3D platform game controlled by your voice! Build pathways with sound and guide your character to victory.
 
+## 🎬 Live Game Demo
+
+### 🎮 **Watch the Gameplay in Action!**
+
+<div align="center">
+
+### 🎬 **Live Gameplay Recording**
+
+![Game Demo](game_screenshot.mp4)
+
+**🎮 Watch the voice-controlled block building in action!**  
+*Speak into your microphone → Generate 3D blocks → Guide character to victory!*
+
+</div>
+
+> � **How it works:** Speak into your microphone → Colorful 3D blocks appear → Guide your character to the golden flag!
+
+---
+
 ## 🚀 Quick Start
 
 ### 1. Download & Install
