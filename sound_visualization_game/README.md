@@ -10,9 +10,12 @@ A Monument Valley-style 3D platform game controlled by your voice! Build pathway
 
 ### 🎬 **Live Gameplay Recording**
 
-> **Demo Video:** [🎥 View Gameplay Recording](https://github.com/tlswa-123/sound_visualization_game/blob/main/game_screenshot.mp4)
+<video width="640" height="360" controls>
+  <source src="https://github.com/tlswa-123/tide_graph/raw/main/sound_visualization_game/game_screenshot.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
 
-https://github.com/user-attachments/assets/game_screenshot.mp4
+> **Demo Video:** [🎥 View Gameplay Recording](https://github.com/tlswa-123/tide_graph/blob/main/sound_visualization_game/game_screenshot.mp4)
 
 **🎮 Watch the voice-controlled block building in action!**  
 *Speak into your microphone → Generate 3D blocks → Guide character to victory!*
