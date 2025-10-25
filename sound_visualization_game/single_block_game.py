@@ -524,18 +524,18 @@ class TerrainBlock3D:
         self.original_frequency = frequency
         self.original_duration = duration
         
-        # 频率决定地形类型 - 降低草地阈值，让更多方块变成草地
-        if frequency < 140:  # 低频：海洋
+        # 频率决定地形类型 - 调整海洋阈值，让它更容易出现
+        if frequency < 180:  # 低频：海洋 (提高到180Hz，覆盖更多声音)
             self.terrain_type = 0
             self.base_color = (64, 164, 223)
             self.terrain_name = "Ocean"
             self.surface_effect = OceanSurface()
-        elif frequency < 200:  # 中频：沙漠 (140-200Hz)
+        elif frequency < 240:  # 中频：沙漠 (180-240Hz)
             self.terrain_type = 1
             self.base_color = (255, 215, 0)  # 更鲜艳的金黄色
             self.terrain_name = "Desert"
             self.surface_effect = DesertSurface()
-        else:  # 高频：草地 (>200Hz) - 大幅降低阈值
+        else:  # 高频：草地 (>240Hz) - 保持适中阈值
             self.terrain_type = 2
             self.base_color = (34, 139, 34)
             self.terrain_name = "Grassland"
@@ -647,15 +647,16 @@ class SingleBlockVisualizationGame:
         self.player_start_z = random.randint(-3, 3)
         self.player = Player(self.player_start_x, self.player_start_z)
         
-        # 终点位置（确保不与小人重合）
+        # 终点位置（确保不与小人重合，且在屏幕可见范围内）
         while True:
-            goal_x = random.randint(-4, 4)
-            goal_z = random.randint(-4, 4)
+            goal_x = random.randint(-2, 2)  # 缩小范围确保在屏幕内
+            goal_z = random.randint(-2, 2)  # 缩小范围确保在屏幕内
             distance = math.sqrt((goal_x - self.player_start_x)**2 + 
                                (goal_z - self.player_start_z)**2)
-            if distance >= 3:  # 确保距离足够远
+            if distance >= 2:  # 减少最小距离要求
                 break
         self.goal = Goal(goal_x, goal_z)
+        print(f"🎯 终点生成位置: ({goal_x}, {goal_z}), 小人位置: ({self.player_start_x}, {self.player_start_z})")
         
         # 等待第一个方块生成
         self.waiting_for_first_block = True
@@ -932,8 +933,9 @@ class SingleBlockVisualizationGame:
         x, z = int(round(x)), int(round(z))
         pos_key = (x, z)
         
+        # 检查位置是否已被占用 - 不允许覆盖现有方块
         if pos_key in self.used_positions:
-            print(f"位置 ({x}, {z}) 已有方块！")
+            print(f"❌ 位置 ({x}, {z}) 已有方块！请选择其他位置")
             return False
         
         if not self.is_position_in_bounds(x, z):
@@ -1548,11 +1550,12 @@ class SingleBlockVisualizationGame:
                     self.player.update(dt)
                     self.goal.update(dt)
                     
-                    # 绘制终点（在小人之前，这样小人会显示在上面）
+                    # 总是绘制终点
                     self.goal.draw(self.screen, self)
                     
-                    # 绘制小人
-                    self.player.draw(self.screen, self)
+                    # 只有第一个方块生成后才绘制小人
+                    if self.first_block_generated:
+                        self.player.draw(self.screen, self)
                 
                 # 绘制UI
                 self.draw_ui(self.screen)
@@ -1617,31 +1620,33 @@ class Player:
     
     def draw(self, screen, game):
         """绘制小人"""
-        if self.current_block:
-            # 计算小人在方块顶部的位置
-            camera_offset = game.get_camera_offset()
-            screen_x, screen_y = game.world_to_screen(self.x, self.z, 
-                                                    self.current_block.height + 20, 
-                                                    camera_offset)
-            
-            # 添加跳动动画
-            bounce = math.sin(self.animation_offset) * 3
-            screen_y += bounce
-            
-            # 绘制小人（简单的圆形）
-            pygame.draw.circle(screen, self.color, (int(screen_x), int(screen_y)), self.size)
-            pygame.draw.circle(screen, (0, 0, 0), (int(screen_x), int(screen_y)), self.size, 2)
-            
-            # 绘制简单的眼睛
-            eye_offset = 5
-            pygame.draw.circle(screen, (255, 255, 255), 
-                             (int(screen_x - eye_offset), int(screen_y - 3)), 3)
-            pygame.draw.circle(screen, (255, 255, 255), 
-                             (int(screen_x + eye_offset), int(screen_y - 3)), 3)
-            pygame.draw.circle(screen, (0, 0, 0), 
-                             (int(screen_x - eye_offset), int(screen_y - 3)), 1)
-            pygame.draw.circle(screen, (0, 0, 0), 
-                             (int(screen_x + eye_offset), int(screen_y - 3)), 1)
+        # 只有当小人站在方块上时才绘制
+        if not self.current_block:
+            return
+        
+        # 计算小人在方块顶部的位置
+        camera_offset = game.get_camera_offset()
+        height = self.current_block.height + 20
+        screen_x, screen_y = game.world_to_screen(self.x, self.z, height, camera_offset)
+        
+        # 添加跳动动画
+        bounce = math.sin(self.animation_offset) * 3
+        screen_y += bounce
+        
+        # 绘制小人（简单的圆形）
+        pygame.draw.circle(screen, self.color, (int(screen_x), int(screen_y)), self.size)
+        pygame.draw.circle(screen, (0, 0, 0), (int(screen_x), int(screen_y)), self.size, 2)
+        
+        # 绘制简单的眼睛
+        eye_offset = 5
+        pygame.draw.circle(screen, (255, 255, 255), 
+                         (int(screen_x - eye_offset), int(screen_y - 3)), 3)
+        pygame.draw.circle(screen, (255, 255, 255), 
+                         (int(screen_x + eye_offset), int(screen_y - 3)), 3)
+        pygame.draw.circle(screen, (0, 0, 0), 
+                         (int(screen_x - eye_offset), int(screen_y - 3)), 1)
+        pygame.draw.circle(screen, (0, 0, 0), 
+                         (int(screen_x + eye_offset), int(screen_y - 3)), 1)
 
 
 class Goal:
@@ -1661,6 +1666,11 @@ class Goal:
         """绘制发光的终点旗子"""
         camera_offset = game.get_camera_offset()
         screen_x, screen_y = game.world_to_screen(self.x, self.z, 50, camera_offset)
+        
+        # 调试信息：打印终点的屏幕坐标（只打印一次）
+        if not hasattr(self, 'debug_printed'):
+            print(f"🎯 终点屏幕坐标: ({int(screen_x)}, {int(screen_y)}) | 世界坐标: ({self.x}, {self.z})")
+            self.debug_printed = True
         
         # 发光效果
         glow_alpha = int(100 + 50 * math.sin(self.animation_offset))
